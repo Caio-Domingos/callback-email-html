@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    Teste Old
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+    <script>
+      const data = getParams();
+      const email2 = data.params.email;
+
+      if (!!email2) {
+        setTimeout(() => {
+          axios
+            .get(
+              `http://localhost:5001/weburn-voucher-dispenser-v2/us-central1/api/utils/vouchers/${email2}`
+            )
+            .then(function (response) {
+              const myVouchers = response.data.data.map(
+                (voucher) => voucher.voucher
+              );
+              console.log('my vouchers ', myVouchers);
+              const doc = document.querySelector('#campo-vouchers div');
+              doc.classList.add('field');
+              console.log('my h2 ', doc);
+
+              myVouchers.forEach((element) => {
+                const html = `<p class="voucher-item">${element}</p>`;
+
+                doc.insertAdjacentHTML('beforeend', html);
+              });
+              createCopyButtons(myVouchers);
+              console.log(response.data.voucher);
+            })
+            .catch(function (error) {
+              console.log(error);
+            })
+            .then(function () {
+              console.log('Finish Axios');
+            });
+        }, 5000);
+      }
+
+      function getParams() {
+        console.log('Iniciando jeitoCaioDeFazerIsso...');
+        let myParams = location.href.split('?');
+        console.log('Meus params', myParams);
+
+        if (myParams.length <= 1) {
+          console.log('Sem parametros');
+          return {
+            url: myParams[1],
+            params: {},
+          };
+        }
+        var data = {
+          url: myParams[1],
+          params: {},
+        };
+        console.log('Data before => ', data);
+        myParams = myParams[1];
+        myParams = '?' + myParams;
+        myParams
+          .substr(1)
+          .split('&')
+          .forEach(function (item) {
+            data.params[item.split('=')[0]] = item.split('=')[1];
+          });
+
+        console.log('Data after => ', data);
+        return data;
+      }
+
+      function createCopyButtons(coupons) {
+        const doc = document.querySelector('#buttons-field div');
+
+        doc.classList.add('field');
+
+        for (let index = 0; index < coupons.length; index++) {
+          const button = document.createElement('div');
+
+          button.classList.add('btn-copy');
+          button.dataset.coupom = coupons[index];
+          button.innerHTML = `Copiar cupom ${index + 1}`;
+          button.onclick = function () {
+            copyCoupom(this.dataset.coupom);
+          };
+
+          doc.appendChild(button);
+        }
+      }
+
+      function copyCoupom(coupom) {
+        console.log('copiar cupom', coupom);
+        copyTextToClipboard(coupom);
+      }
+
+      function fallbackCopyTextToClipboard(text) {
+        var textArea = document.createElement('textarea');
+
+        textArea.value = text;
+        // Avoid scrolling to bottom
+        textArea.style.top = '0';
+        textArea.style.left = '0';
+        textArea.style.position = 'fixed';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+
+        try {
+          var successful = document.execCommand('copy');
+          var msg = successful ? 'successful' : 'unsuccessful';
+          console.log('Fallback: Copying text command was ' + msg);
+        } catch (err) {
+          console.error('Fallback: Oops, unable to copy', err);
+        }
+        document.body.removeChild(textArea);
+      }
+
+      function copyTextToClipboard(text) {
+        if (!navigator.clipboard) {
+          fallbackCopyTextToClipboard(text);
+          return;
+        }
+
+        navigator.clipboard.writeText(text).then(
+          function () {
+            console.log('Async: Copying to clipboard was successful!');
+            alert('Voucher Copiado ' + text + ' !');
+          },
+          function (err) {
+            console.error('Async: Could not copy text: ', err);
+          }
+        );
+      }
+    </script>
+  </body>
+</html>
